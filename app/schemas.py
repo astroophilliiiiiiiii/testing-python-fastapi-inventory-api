@@ -8,23 +8,23 @@ from pydantic import BaseModel, ConfigDict, Field, field_validator
 class ItemBase(BaseModel):
     """Shared fields for inventory item payloads."""
 
-    name: str = Field(..., min_length=1, max_length=255, description="Item name")
+    name: str = Field(..., min_length=1, max_length=255, description='Item name')
     description: str | None = Field(
-        default=None, max_length=1000, description="Optional description"
+        default=None, max_length=1000, description='Optional description'
     )
     category: str | None = Field(
-        default=None, max_length=100, description="Optional category for filtering"
+        default=None, max_length=100, description='Optional category for filtering'
     )
-    quantity: int = Field(..., ge=0, description="Quantity in stock (must be non-negative)")
-    price: float = Field(..., ge=0, description="Unit price (must be non-negative)")
+    quantity: int = Field(..., ge=0, description='Quantity in stock (must be non-negative)')
+    price: float = Field(..., ge=0, description='Unit price (must be non-negative)')
 
-    @field_validator("name")
+    @field_validator('name')
     @classmethod
     def name_must_not_be_blank(cls, value: str) -> str:
         """Reject names that are empty or only whitespace."""
         stripped = value.strip()
         if not stripped:
-            raise ValueError("name must not be empty or whitespace")
+            raise ValueError('name must not be empty or whitespace')
         return stripped
 
 
@@ -44,7 +44,7 @@ class ItemUpdate(BaseModel):
     quantity: int | None = Field(default=None, ge=0)
     price: float | None = Field(default=None, ge=0)
 
-    @field_validator("name")
+    @field_validator('name')
     @classmethod
     def name_must_not_be_blank(cls, value: str | None) -> str | None:
         """Reject names that are empty or only whitespace."""
@@ -52,7 +52,7 @@ class ItemUpdate(BaseModel):
             return value
         stripped = value.strip()
         if not stripped:
-            raise ValueError("name must not be empty or whitespace")
+            raise ValueError('name must not be empty or whitespace')
         return stripped
 
 
