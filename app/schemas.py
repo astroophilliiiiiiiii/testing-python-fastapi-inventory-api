@@ -15,9 +15,7 @@ class ItemBase(BaseModel):
     category: str | None = Field(
         default=None, max_length=100, description="Optional category for filtering"
     )
-    quantity: int = Field(
-        ..., ge=0, description="Quantity in stock (must be zero or positive)"
-    )
+    quantity: int = Field(..., ge=0, description="Quantity in stock (must be non-negative)")
     price: float = Field(..., ge=0, description="Unit price (must be non-negative)")
 
     @field_validator("name")
