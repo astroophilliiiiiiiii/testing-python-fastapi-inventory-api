@@ -29,10 +29,23 @@ def create_item(
 )
 def list_items(
     category: str | None = Query(default=None, description="Filter by category"),
+    limit: int = Query(
+        default=10,
+        ge=1,
+        le=100,
+        description="Maximum number of items to return (1‑100, default 10)",
+    ),
+    offset: int = Query(
+        default=0,
+        ge=0,
+        description="Number of items to skip before starting to collect the result set (default 0)",
+    ),
     db: Session = Depends(get_db),
 ) -> list[schemas.ItemRead]:
-    """Return all inventory items, optionally filtered by category."""
-    return crud.list_items(db=db, category=category)
+    """Return inventory items, optionally filtered by category, with pagination support."""
+    items = crud.list_items(db=db, category=category)
+    # Apply pagination slicing
+    return items[offset : offset + limit]
 
 
 @router.get(
@@ -82,3 +95,4 @@ def delete_item(item_id: int, db: Session = Depends(get_db)) -> None:
             status_code=status.HTTP_404_NOT_FOUND,
             detail=f"Inventory item {item_id} not found",
         )
+    return None
