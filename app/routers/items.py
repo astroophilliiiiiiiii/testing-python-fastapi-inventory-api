@@ -29,10 +29,11 @@ def create_item(
 )
 def list_items(
     category: str | None = Query(default=None, description="Filter by category"),
+    q: str | None = Query(default=None, description="Free‑text search on name or description"),
     db: Session = Depends(get_db),
 ) -> list[schemas.ItemRead]:
-    """Return all inventory items, optionally filtered by category."""
-    return crud.list_items(db=db, category=category)
+    """Return all inventory items, optionally filtered by category and/or free‑text search."""
+    return crud.list_items(db=db, category=category, q=q)
 
 
 @router.get(
@@ -82,3 +83,4 @@ def delete_item(item_id: int, db: Session = Depends(get_db)) -> None:
             status_code=status.HTTP_404_NOT_FOUND,
             detail=f"Inventory item {item_id} not found",
         )
+    return None

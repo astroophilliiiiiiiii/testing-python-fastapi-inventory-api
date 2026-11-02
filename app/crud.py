@@ -19,11 +19,28 @@ def create_item(db: Session, item: schemas.ItemCreate) -> models.InventoryItem:
     return db_item
 
 
-def list_items(db: Session, category: str | None = None) -> list[models.InventoryItem]:
-    """Return all inventory items, optionally filtered by category."""
+def list_items(
+    db: Session,
+    category: str | None = None,
+    q: str | None = None,
+) -> list[models.InventoryItem]:
+    """Return all inventory items, optionally filtered by category and/or free‑text search.
+
+    The ``q`` parameter performs a case‑insensitive substring match against both the
+    ``name`` and ``description`` fields.
+    """
     stmt = select(models.InventoryItem)
+
     if category is not None:
         stmt = stmt.where(models.InventoryItem.category == category)
+
+    if q:
+        pattern = f"%{q}%"
+        stmt = stmt.where(
+            (models.InventoryItem.name.ilike(pattern)) |
+            (models.InventoryItem.description.ilike(pattern))
+        )
+
     stmt = stmt.order_by(models.InventoryItem.id)
     return list(db.execute(stmt).scalars().all())
 
