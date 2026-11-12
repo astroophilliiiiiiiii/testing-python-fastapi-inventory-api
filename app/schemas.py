@@ -41,7 +41,7 @@ class ItemUpdate(BaseModel):
     name: str | None = Field(default=None, min_length=1, max_length=255)
     description: str | None = Field(default=None, max_length=1000)
     category: str | None = Field(default=None, max_length=100)
-    quantity: int | None = Field(default=None, gt=0)
+    quantity: int | None = Field(default=None, ge=0)
     price: float | None = Field(default=None, ge=0)
 
     @field_validator("name")
