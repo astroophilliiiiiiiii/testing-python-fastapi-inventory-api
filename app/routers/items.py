@@ -2,6 +2,7 @@
 
 from fastapi import APIRouter, Depends, HTTPException, Query, status
 from sqlalchemy.orm import Session
+from typing import Literal
 
 from app import crud, schemas
 from app.database import get_db
@@ -29,10 +30,16 @@ def create_item(
 )
 def list_items(
     category: str | None = Query(default=None, description="Filter by category"),
+    sort_by: Literal['id', 'name', 'price', 'quantity'] = Query(
+        default='id', description="Column to sort by"
+    ),
+    order: Literal['asc', 'desc'] = Query(
+        default='asc', description="Sort direction"
+    ),
     db: Session = Depends(get_db),
 ) -> list[schemas.ItemRead]:
-    """Return all inventory items, optionally filtered by category."""
-    return crud.list_items(db=db, category=category)
+    """Return all inventory items, optionally filtered by category and sorted."""
+    return crud.list_items(db=db, category=category, sort_by=sort_by, order=order)
 
 
 @router.get(
@@ -82,3 +89,4 @@ def delete_item(item_id: int, db: Session = Depends(get_db)) -> None:
             status_code=status.HTTP_404_NOT_FOUND,
             detail=f"Inventory item {item_id} not found",
         )
+    return None
