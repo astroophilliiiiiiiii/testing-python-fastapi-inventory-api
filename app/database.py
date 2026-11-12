@@ -1,33 +1,44 @@
-"""Database configuration: engine, session factory, and declarative base.
-
-The default database is a local SQLite file. The URL can be overridden via the
-``DATABASE_URL`` environment variable, which makes it easy to run against an
-alternate database (for example, in CI or production) without code changes.
-"""
+"""Database utilities – switched to an in-memory SQLite DB for tests."""
 
 import os
-
 from sqlalchemy import create_engine
-from sqlalchemy.orm import DeclarativeBase, sessionmaker
+from sqlalchemy.orm import sessionmaker, declarative_base
+from sqlalchemy.pool import StaticPool
 
-# Default to a local SQLite database file in the project directory.
-DATABASE_URL = os.getenv("DATABASE_URL", "sqlite:///./inventory.db")
+# ----------------------------------------------------------------------
+# Database URL configuration.
+# ----------------------------------------------------------------------
+# In production, set the DATABASE_URL environment variable.
+# For the test suite (when no variable is provided) we default to an
+# in‑memory SQLite database that is shared across connections.
+# The StaticPool ensures the same connection is reused, keeping the
+# in‑memory database alive for the duration of the process.
+# ----------------------------------------------------------------------
+DATABASE_URL = os.getenv(
+    "DATABASE_URL",
+    "sqlite:///:memory:"  # default to in‑memory SQLite for testing
+)
 
-# ``check_same_thread`` is required for SQLite when used with FastAPI because a
-# single connection may be shared across threads.
-connect_args = {"check_same_thread": False} if DATABASE_URL.startswith("sqlite") else {}
-
-engine = create_engine(DATABASE_URL, connect_args=connect_args)
+engine = create_engine(
+    DATABASE_URL,
+    connect_args={"check_same_thread": False},
+    poolclass=StaticPool,
+    echo=False,
+)
 
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
+Base = declarative_base()
 
-
-class Base(DeclarativeBase):
-    """Declarative base class for all ORM models."""
+# Create all tables at import time so that the in‑memory DB is ready.
+Base.metadata.create_all(bind=engine)
 
 
 def get_db():
-    """FastAPI dependency that yields a database session and closes it after use."""
+    """FastAPI dependency that provides a database session.
+
+    The session is yielded to the path operation and closed automatically
+    after the request is finished.
+    """
     db = SessionLocal()
     try:
         yield db
