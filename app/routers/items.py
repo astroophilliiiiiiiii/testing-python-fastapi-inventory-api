@@ -29,10 +29,11 @@ def create_item(
 )
 def list_items(
     category: str | None = Query(default=None, description="Filter by category"),
+    low_stock: bool = Query(False, description="Filter items with quantity < 5"),
     db: Session = Depends(get_db),
 ) -> list[schemas.ItemRead]:
-    """Return all inventory items, optionally filtered by category."""
-    return crud.list_items(db=db, category=category)
+    """Return all inventory items, optionally filtered by category and low stock flag."""
+    return crud.list_items(db=db, category=category, low_stock=low_stock)
 
 
 @router.get(
