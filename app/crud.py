@@ -19,11 +19,23 @@ def create_item(db: Session, item: schemas.ItemCreate) -> models.InventoryItem:
     return db_item
 
 
-def list_items(db: Session, category: str | None = None) -> list[models.InventoryItem]:
-    """Return all inventory items, optionally filtered by category."""
+def list_items(
+    db: Session,
+    category: str | None = None,
+    low_stock: bool = False,
+) -> list[models.InventoryItem]:
+    """Return all inventory items, optionally filtered by category and low stock.
+
+    Args:
+        db: Database session.
+        category: Optional category to filter by.
+        low_stock: If True, only return items with quantity less than 5.
+    """
     stmt = select(models.InventoryItem)
     if category is not None:
         stmt = stmt.where(models.InventoryItem.category == category)
+    if low_stock:
+        stmt = stmt.where(models.InventoryItem.quantity < 5)
     stmt = stmt.order_by(models.InventoryItem.id)
     return list(db.execute(stmt).scalars().all())
 
