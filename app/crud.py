@@ -19,12 +19,38 @@ def create_item(db: Session, item: schemas.ItemCreate) -> models.InventoryItem:
     return db_item
 
 
-def list_items(db: Session, category: str | None = None) -> list[models.InventoryItem]:
-    """Return all inventory items, optionally filtered by category."""
+def list_items(
+    db: Session,
+    category: str | None = None,
+    sort_by: str = 'id',
+    order: str = 'asc',
+) -> list[models.InventoryItem]:
+    """Return all inventory items, optionally filtered by category and sorted.
+
+    Parameters
+    ----------
+    db: Session
+        Database session.
+    category: str | None
+        Optional category filter.
+    sort_by: str
+        Column name to sort by. Allowed values are 'id', 'name', 'price', 'quantity'.
+    order: str
+        Sort direction, either 'asc' or 'desc'.
+    """
+    allowed_sort_columns = {'id', 'name', 'price', 'quantity'}
+    if sort_by not in allowed_sort_columns:
+        raise ValueError(f"Invalid sort_by column: {sort_by}")
+    if order not in {'asc', 'desc'}:
+        raise ValueError(f"Invalid order: {order}")
+
     stmt = select(models.InventoryItem)
     if category is not None:
         stmt = stmt.where(models.InventoryItem.category == category)
-    stmt = stmt.order_by(models.InventoryItem.id)
+
+    column = getattr(models.InventoryItem, sort_by)
+    order_clause = column.asc() if order == 'asc' else column.desc()
+    stmt = stmt.order_by(order_clause)
     return list(db.execute(stmt).scalars().all())
 
 
